@@ -1,6 +1,14 @@
 # CHANGELOG #
 All the log of changes on the project/repository
 
+## 2021-12-15
+### Added
+- Webscrapping
+  - Uploaded raw versions, cleaning and refactoring left to do
+
+### Modified
+- Updated a little bit more the README.md, a lot left to explain
+
 ## 2021-12-14
 ### Added
 - Base README.md created
