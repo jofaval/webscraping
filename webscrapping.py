@@ -18,34 +18,34 @@ def import_or_install(package):
         pip.main(['install', package]) 
         __import__(package)
 
-# Instala/Importa todos los módulos necesarios
+# Install/Import all necessary modules
 [import_or_install(module) for module in MODULES]
 
-# Para las peticiones
+# For requests
 import requests
-# Para el parseo del HTML
+# For parsing the HTML
 from bs4 import BeautifulSoup
-# Para la representación visual de los datos, usado anteriormente para guardar en CSV
+# For visual representation of data, previously used to save to CSV
 # import pandas as pd
-# Para las operaciones de sistema, limpiar consola y crear directorios
+# For system operations, clean console and create directories
 import os
-# Para validar la URL de las peticiones
+# To validate the URL of the requests
 import validators
-# Para guardar ficheros en binario (imágenes)
+# To save files in binary (images)
 import shutil
-# Para el timestamp del log
+# For the log timestamp
 import datetime
-# Para los hilos y la optimización del webscraper
+# For threads and webscraper optimization
 import threading
-# Usado para medir el tiempo
+# Used to measure time
 import time
-# Para poder generar una queue de hilos concurrentes (simultáneos)
+# To be able to generate a queue of concurrent threads (simultaneous)
 from concurrent.futures import ThreadPoolExecutor
-# Para instalar las dependencias de módulos que son necesarias para la ejecución
+# To install the module dependencies that are required for execution
 import pip
-# Para optimizar la detección de encoding
+# To optimize encoding detection
 import cchardet
-# Para cerrar el contexto de una variable de forma segura
+# To safely close the context of a variable
 from contextlib import closing
 
 # Typing imports
@@ -63,7 +63,7 @@ basedir = os.path.dirname(__file__)
 true = True
 false = False
 
-# Es el toggle para saber si se imprimirán o no prints de seguimiento
+# It is the toggle to know if follow-up prints will be printed or not
 DEBUG = False
 BASE_DOMAIN = 'www.thewhiskyexchange.com'
 BASE_URL = 'https://' + BASE_DOMAIN
@@ -79,7 +79,7 @@ URL = BASE_URL
 HEADERS = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36' }
 TIMEOUT = (3.05, 27)
 # PARSER = 'html.parser'
-# lxml funciona mucho más rápido que el html.parser
+# lxml works much faster than html.parser
 PARSER = 'lxml'
 
 # FILENAME = 'data.csv'
@@ -89,16 +89,16 @@ IMG_DIR = 'img'
 
 RETRY = True
 DOWNLOAD_ATTEMPTS = 3
-# Si no se quiere volver a intentar los intentos pasan a ser 1 (la primera vez)
+# If you do not want to try again, the attempts become 1 (the first time)
 if not RETRY: DOWNLOAD_ATTEMPTS = 1
 
 
-# Acelera las solicitud de peticiones HTTP al reusar la sesión que se abre en el primer request
-# cada request de normal crea una nueva sesión, de esta manera se utilizará siempre la misma
+# Speeds up HTTP request requests by reusing the session that is opened in the first request
+# each normal request creates a new session, in this way the same session will always be used
 # https://thehftguy.com/2020/07/28/making-beautifulsoup-parsing-10-times-faster/
 REQUEST_SESSION = requests.Session()
 
-# Controla el uso de Threads en el sistema
+# Control the use of Threads in the system
 USE_THREADS = False
 
 # |-----------------------------------------|
@@ -110,7 +110,7 @@ def is_null(val): return val is None
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Se limpia la consola cada vez que se ejecuta
+# The console is cleaned every time it is run
 cls()
 
 def create_folder_if_not_exists(folder):
@@ -129,12 +129,12 @@ def get_page(url: str, display: bool = True):
         return ''
 
     with closing( REQUEST_SESSION.get(url, timeout=TIMEOUT, headers=HEADERS, stream=True) ) as res:
-        # La respuesta ha fallado
+        # The answer has failed
         if not is_success(res):
             if DEBUG: print('No se ha podido recuperar el contenido de la página correctamente')
             return ''
 
-        # Si se devuelve el .text y no el .content se evita la devolución de valores binarios
+        # If the .text is returned and not the .content, the return of binary values ​​is avoided
         html = res.text
         if display: print(res.status_code, html)
 
@@ -148,8 +148,7 @@ def add_detail(dict: dict, name: str, value: any = None):
 CATEGORY_JOINER = ">"
 def parse_category(element):
     categories = element[0].select('li')
-    # El primer valor siempre será "Home", y el último el nombre del producto
-    # categories = categories[1:-2] # esto da error, -1 ya ignora el último lugar
+    # The first value will always be "Home", and the last the name of the product.
     categories = categories[1:-1]
 
     return CATEGORY_JOINER.join([l.text for l in categories])
@@ -185,7 +184,7 @@ FIELDS = {
 }
 
 def get_value(field, element):
-    # Si el campo tiene una función de parseo, se utiliza
+    # If the field has a parse function, it is used
     if (('parser' in field) & (not is_null(field['parser']))):
         value = field['parser'](element)
     else:
@@ -201,7 +200,7 @@ def get_value(field, element):
     return value
 
 def get_detail(soup, dictionary: dict, name: str):
-    # print('Se intenta recueprar el campo', name)
+    # print('Attempt to retrieve field', name)
 
     field = FIELDS[name] if name in FIELDS else " "
     query = field['query']
@@ -278,11 +277,11 @@ def get_category_products(url: str = None, content: str = None):
     category_product_tags = soup.select(CATEGORY_PRODUCT_LINK_QUERY)
 
     products = set([ c_tag.get('href') for c_tag in category_product_tags if is_product_url(c_tag.get('href')) ])
-    # TODO: añadir un condicionar para el BASE_URL pero tener en cuenta que se espera devolver un list
+    # TODO: add a condition for the BASE_URL but bear in mind that it is expected to return a list
     products = [ BASE_URL + p for p in list(products) ]
 
     if DEBUG: print('Se han recuperado un total de:', len(products), 'producto(s)')
-    # tal vez se podría forzar aquí un retorno de list para que funcione correctamente
+    # maybe you could force a return of list here to work properly
     return products
 
 SEPARATOR = ";"
@@ -354,7 +353,7 @@ def save_images(data: list):
         img_url = row['img']
         if DEBUG: print('Se va a intentar descargar la imagen', img_url)
 
-        # Las imágenes de productos personalizables no se llegan a descargar, serían a mano
+        # The images of customizable products are not downloaded, they would be by hand
         try:
             if not (validators.url(img_url)): raise Exception('Imagen no válida')
 
@@ -376,7 +375,7 @@ def empty_threads():
     del THREADS[:THREADS_LIMIT]
 
 def wait_for_all_threads(empty = True, warning = True):
-    # Espera a que terminen todos los hilos antes de pasar al siguiente
+    # Wait for all threads to finish before moving on to the next
     for thread in THREADS:
         thread.join()
 
@@ -384,7 +383,7 @@ def wait_for_all_threads(empty = True, warning = True):
     if empty: empty_threads()
 
 THREADS = []
-# 10 va genial, 15 empieza a ser demasiado, y 6 demasiado poco
+# 10 is going great, 15 is getting too much, and 6 is getting too little
 # WORKERS
 THREADS_LIMIT = 25
 
@@ -392,9 +391,9 @@ def threadify(target, args: tuple):
     # Guard close para evitar errores si solo se pasa un parámetro
     # if type(args) != tuple: args = tuple(args)
 
-    # Se espera antes de ejecutar de más, de esta manera el limit funciona correctamente
+    # It is expected before executing more, in this way the limit works correctly
     if (len(THREADS) >= THREADS_LIMIT):
-        # TODO: buscar una manera en la que se evite hacer un wait_all
+        # TODO: find a way to avoid doing a wait_all
         wait_for_all_threads()
 
     thread = threading.Thread(target=target, args=args)
@@ -405,7 +404,7 @@ MAX_PRODUCT_DOWNLOAD_ATTEMPTS = DOWNLOAD_ATTEMPTS
 def product_to_thread(data):
     details, product = data
 
-    # Se hace un bucle para que se intente la descarga n número de veces
+    # A loop is made so that the download is attempted n number of times
     for attempt in range(0, MAX_PRODUCT_DOWNLOAD_ATTEMPTS):
         try:
             product_detail = get_product_details(product)
@@ -439,7 +438,7 @@ def category_products_to_thread(data):
     return None
 
 def is_csv_corrupt(filename: str):
-    # Si no es CSV, se fuerza
+    # If it is not CSV, it is forced
     if not str(filename).endswith('.csv'): filename = f'{filename}.csv'
     file_path = os.path.join(DATA_FOLDER, filename)
 
@@ -447,8 +446,8 @@ def is_csv_corrupt(filename: str):
         content = fr.read()
         content_lines = content.split(FILE_NEWLINE)
 
-    # TODO: optimizar para que no utilice set si no que compare línea a línea con las anteriores?
-    # Se busca detectar todas aquellas líneas que estén repetidas en el CSV
+    # TODO: optimize so that it does not use set if it does not compare line by line with the previous ones?
+    # It seeks to detect all those lines that are repeated in the CSV
     lines = set(content_lines)
 
     return len(content_lines) != len(lines)
@@ -469,38 +468,38 @@ def scrape(
 
     was_products_empty = is_null(products)
 
-    # Si no se ha pasado por parámetro, se recuperan de la página
+    # If it has not been passed by parameter, they are retrieved from the page
     if is_null(category_urls):
         category_urls = get_categories(URL) if was_products_empty else []
-    # Se asegura que no habrá ninguna categoría repetida
+    # It is ensured that there will be no repeating categories
     category_urls = list( set(category_urls) )
 
     details = []
 
-    # Se usa un SET para los enlaces de productos porque pueden haber repetidos
-    # (es una afirmación, no una duda)
+    # A SET is used for product links because there may be duplicates
+    # (it's a statement, not a doubt)
     products = set() if was_products_empty else set(products)
 
-    # No es un autoincremental porque se trabaja con un SET
+    # It is not an autoincremental because it works with a SET
     num_products = 0
 
-    # El limit no funciona con un solo elemento
+    # The limit does not work with a single element
     if len(category_urls) > 1 & limit != ALL:
         category_urls = category_urls[:category_limit]
 
     # if DEBUG: print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
     print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
 
-    # Primero se recuperan los enlaces de todos los productos, teniendo en cuenta cada uno de los límites
-    # implementear el threadify aquí, y si luego una categoría tardase de más en paginar, pues ya es otro problema
+    # First, the links of all the products are retrieved, taking into account each of the limits
+    # implement threadify here, and if then a category takes too long to paginate, it is another problem
     if was_products_empty:
         categories_args = [(products, category_url, product_limit, limit) for category_url in category_urls]
 
         if not USE_THREADS:
-            # Versión sin hilos
+            # Wireless version
             [category_products_to_thread(data) for data in categories_args]
         else:
-            # Versión con hilos
+            # String version
             with ThreadPoolExecutor(THREADS_LIMIT) as executor:
                 executor.map(category_products_to_thread, categories_args)
                 executor.shutdown()
@@ -509,18 +508,18 @@ def scrape(
     # if DEBUG: print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
     print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
 
-    # Con los threads se puede llegar a sobrepasar el limit, así que se fuerza
+    # With threads it is possible to exceed the limit, so force
     if len(products) > product_limit & product_limit != ALL: products = list(products)[:product_limit]
 
     products_args = [(details, p) for p in products]
 
     if not USE_THREADS:
-        # Versión sin hilos
+        # Wireless version
         [product_to_thread(data) for data in products_args]
     else:
-        # Y luego ya se recorren cada uno de los productos recuperando su información
+        # And then they go through each of the products recovering their information
         with ThreadPoolExecutor(THREADS_LIMIT) as executor:
-            # print('se está intentando', products_args)
+            # print('trying', products_args)
             executor.map(product_to_thread, products_args)
             executor.shutdown()
 
@@ -531,7 +530,7 @@ def scrape(
         # df.to_csv(FILENAME, SEPARATOR, EMPTY_VALUE)
 
     if as_csv:
-        # if DEBUG: print('\nSe guarda como CSV\n', len(details), 'línea(s)\n')
+        # if DEBUG: print ('\nSave as CSV\n', len (details), 'line(s)\n')
         print('\nSe guarda como CSV\n', len(details), 'línea(s)\n')
         save_csv(details)
     if save_imgs:
@@ -559,8 +558,8 @@ categories_filepath = os.path.join(basedir, 'categories.txt')
 with open(categories_filepath, 'r+') as f:
     category_urls = [ line.strip() for line in f.readlines() ]
 
-# Introducir los productos que no se han podido descargar en la iteración
-# TODO: implementar un append al CSV cuando se pasen productos como argumento
+# Enter the products that could not be downloaded in the iteration
+# TODO: implement an append to the CSV when products are passed as an argument
 products = [
     'https://www.thewhiskyexchange.com/p/19887/high-west-campfire',
     'https://www.thewhiskyexchange.com/p/62334/kurayoshi-pure-malt',
@@ -569,7 +568,7 @@ products = [
 # DEBUG = True
 DEBUG = False
 USE_THREADS = False
-# 0:01:51.676625 con el debug a true   544 lineas
-# 0:01:41.111771 con el debug a false  522 lineas
+# 0:01:51.676625 with debug to true 544 lines
+# 0:01:41.111771 with debug to false 522 lines
 scrape(limit = ALL, save_imgs=False, display=False, category_urls=category_urls, detect_corruption=False)
 # scrape(limit = 3, save_imgs=False, display=False, category_urls=category_urls[:2], detect_corruption=False)
