@@ -92,18 +92,6 @@ FIELDS = {
 }
 
 def get_detail(soup, dictionary, name):
-    """
-    Devuelve un campo de detalle
-
-    Parameters
-    ----------
-        soup : BeautifulSoup
-            El parser de HTML
-        dictionary : dict
-            El diccionario que representa a una fila con todos los valores
-        name : str
-            El nombre del campo a recuperar, y de la columna
-    """
     # print('Se intenta recueprar el campo', name)
 
     field = FIELDS[name] if name in FIELDS else " "
@@ -119,7 +107,7 @@ def get_detail(soup, dictionary, name):
             value = element[0].text
             if (str(value).replace('\n', '') == ''): value = element[0].get('src')
 
-    value = str(value).strip()
+    if not (value is None): value = str(value).strip()
     add_detail(dictionary, name, value)
 
     return value
@@ -181,13 +169,14 @@ def get_category_products(url = None, content = None):
 
     # NO FUNCIONA, FALTA QUE CARGUE LA PÁGINA POR COMPLETO, FUNCIONA CON JS
     pages = soup.select('#paging')
+    # num_pages = len(pages[0].select('option'))
     num_pages = len(pages)
     # print(num_pages)
     # hacer un for para recuperar todas las páginas de una categoría dependiendo del select
 
     for page in range(1, num_pages + 1):
         temp_url = str(url) + '?pg=' + str(page) + '&psize=24&sort=rdesc'
-        get_page(temp_url, False)
+        content = get_page(temp_url, False)
         
         soup = BeautifulSoup(content, features=PARSER)
         category_product_tags = soup.select(CATEGORY_PRODUCT_LINK_QUERY)
@@ -233,10 +222,13 @@ def download_img(url):
 def get_now():
     return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
+def get_timestamp_str():
+    return '[' + get_now() + ']'
+
 LOG_FILE = 'error.log'
 def log_error(data):
     with open(LOG_FILE, 'a+') as log:
-        log.write('[' + get_now() + ']' + ' ' + str(data))
+        log.write(get_timestamp_str() + ' ' + str(data))
         log.write('\n')
 
 def save_images(data):
@@ -271,8 +263,8 @@ def save_images(data):
     if (not_downloaded > 0): print('No se ha(n) podido descargar la(s) imágen(es) de', not_downloaded, 'producto(s)')
 
 ALL = -1
-def scrape(category_limit = ALL, product_limit = ALL, limit = 1000):
-    category_urls = get_categories(URL)
+def scrape(category_limit = ALL, product_limit = ALL, limit = -1, as_csv = True, save_imgs = True, display = False, category_urls = []):
+    if (category_urls is None): category_urls = get_categories(URL)
 
     details = []
 
@@ -291,9 +283,9 @@ def scrape(category_limit = ALL, product_limit = ALL, limit = 1000):
         for product_url in product_urls[:product_limit]:
             products.add(product_url)
             num_products = len(products)
-            if (num_products >= limit): break
+            if (limit > 0) & (num_products >= limit): break
 
-        if (num_products >= limit): break
+        if (limit > 0) & (num_products >= limit): break
     
     # Y luego ya se recorren cada uno de los productos recuperando su información
     for product in products:
@@ -303,11 +295,13 @@ def scrape(category_limit = ALL, product_limit = ALL, limit = 1000):
         except:
             log_error('No se ha podido descargar el producto ', product)
     
-    # df = pd.DataFrame(details)
-    # print(df)
-    # df.to_csv(FILENAME, SEPARATOR, EMPTY_VALUE)
-    save_csv(details)
-    save_images(details)
+    if display:
+        df = pd.DataFrame(details)
+        print(df)
+        # df.to_csv(FILENAME, SEPARATOR, EMPTY_VALUE)
+
+    if as_csv: save_csv(details)
+    if save_imgs: save_images(details)
 
 scrape(limit = 1000)
 
