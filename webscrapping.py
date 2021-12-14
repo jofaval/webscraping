@@ -1,8 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# CRON CONFIGURATION
+# 0 4 * * * /usr/bin/python3 /home/user/johndoe/webscrapping.py
+
+MODULES = [
+    'requests',
+    'bs4',
+    'validators',
+    'cchardet',
+    'lxml',
+]
+def import_or_install(package):
+    try:
+        __import__(package)
+    except ImportError:
+        pip.main(['install', package]) 
+        __import__(package)
+
+# Instala/Importa todos los módulos necesarios
+[import_or_install(module) for module in MODULES]
+
+# Para las peticiones
 import requests
 # Para el parseo del HTML
 from bs4 import BeautifulSoup
 # Para la representación visual de los datos, usado anteriormente para guardar en CSV
-import pandas as pd
+# import pandas as pd
 # Para las operaciones de sistema, limpiar consola y crear directorios
 import os
 # Para validar la URL de las peticiones
@@ -34,6 +58,8 @@ from requests.models import Response
 # |               CONSTANTES               |
 # |----------------------------------------|
 
+basedir = os.path.dirname(__file__)
+# basedir = os.path.join('kunden', basedir, 'webscrapping', 'big-data-aplicados')
 true = True
 false = False
 
@@ -66,32 +92,20 @@ DOWNLOAD_ATTEMPTS = 3
 # Si no se quiere volver a intentar los intentos pasan a ser 1 (la primera vez)
 if not RETRY: DOWNLOAD_ATTEMPTS = 1
 
-MODULES = [
-    'validators',
-    'bs4',
-    'cchardet'
-]
 
 # Acelera las solicitud de peticiones HTTP al reusar la sesión que se abre en el primer request
 # cada request de normal crea una nueva sesión, de esta manera se utilizará siempre la misma
 # https://thehftguy.com/2020/07/28/making-beautifulsoup-parsing-10-times-faster/
 REQUEST_SESSION = requests.Session()
 
+# Controla el uso de Threads en el sistema
+USE_THREADS = False
+
 # |-----------------------------------------|
 # |                 MÉTODOS                 |
 # |-----------------------------------------|
 
 def is_null(val): return val is None
-
-def import_or_install(package):
-    try:
-        __import__(package)
-    except ImportError:
-        pip.main(['install', package]) 
-        __import__(package)
-
-# Instala/Importa todos los módulos necesarios
-[import_or_install(module) for module in MODULES]
 
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -149,17 +163,28 @@ def parse_img(element):
 
     return src
 
+def parse_price_prev(element, default = '£0.00'):
+    if not element: return default
+
+    price_prev = element[0].text
+
+    price_prev = price_prev.replace('(Was ')
+    price_prev = price_prev.replace(')')
+
+    return price_prev
+
 FIELDS = {
-    'name'       : { 'query': '.product-main__name'                 , 'parser': None          , 'default': 'Sin nombre'           },
-    'price'      : { 'query': '.product-action__price'              , 'parser': None          , 'default': '£0.00'                },
-    'description': { 'query': '.product-main__description'          , 'parser': None          , 'default': 'Sin descripción'      },
-    'img'        : { 'query': '.product-main__image-container img'  , 'parser': parse_img     , 'default': 'Imagen no encontrada' },
-    'category'   : { 'query': '.breadcrumb__list'                   , 'parser': parse_category, 'default': 'Sin categoría'        },
-    'unit'       : { 'query': '.product-main__data'                 , 'parser': None          , 'default': 'Sin unidad'           },
-    'rating'     : { 'query': '.review-overview__rating.star-rating', 'parser': None          , 'default': 'Sin valoración'       },
+    'name'       : { 'query': '.product-main__name'                 , 'parser': None            , 'default': 'Sin nombre'           },
+    'price'      : { 'query': '.product-action__price'              , 'parser': None            , 'default': '£0.00'                },
+    'price_prev' : { 'query': '.product-offer__price'               , 'parser': parse_price_prev, 'default': '£0.00'                },
+    'description': { 'query': '.product-main__description'          , 'parser': None            , 'default': 'Sin descripción'      },
+    'img'        : { 'query': '.product-main__image-container img'  , 'parser': parse_img       , 'default': 'Imagen no encontrada' },
+    'category'   : { 'query': '.breadcrumb__list'                   , 'parser': parse_category  , 'default': 'Sin categoría'        },
+    'unit'       : { 'query': '.product-main__data'                 , 'parser': None            , 'default': 'Sin unidad'           },
+    'rating'     : { 'query': '.review-overview__rating.star-rating', 'parser': None            , 'default': 'Sin valoración'       },
 }
 
-def get_value(field: dict, element):
+def get_value(field, element):
     # Si el campo tiene una función de parseo, se utiliza
     if (('parser' in field) & (not is_null(field['parser']))):
         value = field['parser'](element)
@@ -271,7 +296,7 @@ def save_csv(data: list):
     keys = EXTRA_START_COLUMNS + list(FIELDS.keys()) + EXTRA_END_COLUMNS
     # keys = list(FIELDS.keys())
 
-    filename = os.path.join(DATA_FOLDER, FILENAME)
+    filename = os.path.join(basedir, DATA_FOLDER, FILENAME)
     create_folder_if_not_exists(DATA_FOLDER)
     with open(filename, 'w+', 2, 'utf-8') as file:
         file.write(SEPARATOR.join(['\"' + k + '\"' for k in keys]))
@@ -361,7 +386,7 @@ def wait_for_all_threads(empty = True, warning = True):
 THREADS = []
 # 10 va genial, 15 empieza a ser demasiado, y 6 demasiado poco
 # WORKERS
-THREADS_LIMIT = 50
+THREADS_LIMIT = 25
 
 def threadify(target, args: tuple):
     # Guard close para evitar errores si solo se pasa un parámetro
@@ -394,6 +419,7 @@ MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS = DOWNLOAD_ATTEMPTS
 def category_products_to_thread(data):
     products, category_url, product_limit, limit = data
 
+    product_urls = []
     for attempt in range(0, MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS):
         try:
             product_urls = get_category_products(category_url)
@@ -461,7 +487,7 @@ def scrape(
     # El limit no funciona con un solo elemento
     if len(category_urls) > 1 & limit != ALL:
         category_urls = category_urls[:category_limit]
-    
+
     # if DEBUG: print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
     print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
 
@@ -470,10 +496,16 @@ def scrape(
     if was_products_empty:
         categories_args = [(products, category_url, product_limit, limit) for category_url in category_urls]
 
-        with ThreadPoolExecutor(THREADS_LIMIT) as executor:
-            executor.map(category_products_to_thread, categories_args)
-            executor.shutdown()
+        if not USE_THREADS:
+            # Versión sin hilos
+            [category_products_to_thread(data) for data in categories_args]
+        else:
+            # Versión con hilos
+            with ThreadPoolExecutor(THREADS_LIMIT) as executor:
+                executor.map(category_products_to_thread, categories_args)
+                executor.shutdown()
 
+    # print('category_urls', products, categories_args)
     # if DEBUG: print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
     print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
 
@@ -482,71 +514,26 @@ def scrape(
 
     products_args = [(details, p) for p in products]
 
-    # Y luego ya se recorren cada uno de los productos recuperando su información
-    with ThreadPoolExecutor(THREADS_LIMIT) as executor:
-        # print('se está intentando', products_args)
-
-        executor.map(product_to_thread, products_args)
-        executor.shutdown()
+    if not USE_THREADS:
+        # Versión sin hilos
+        [product_to_thread(data) for data in products_args]
+    else:
+        # Y luego ya se recorren cada uno de los productos recuperando su información
+        with ThreadPoolExecutor(THREADS_LIMIT) as executor:
+            # print('se está intentando', products_args)
+            executor.map(product_to_thread, products_args)
+            executor.shutdown()
 
     if display:
-        df = pd.DataFrame(details)
-        print(df)
+        print(details)
+        # df = pd.DataFrame(details)
+        # print(df)
         # df.to_csv(FILENAME, SEPARATOR, EMPTY_VALUE)
 
     if as_csv:
         # if DEBUG: print('\nSe guarda como CSV\n', len(details), 'línea(s)\n')
         print('\nSe guarda como CSV\n', len(details), 'línea(s)\n')
         save_csv(details)
-    if save_imgs:
-        if DEBUG: print('\nSe descargan las imágenes\n')
-        save_images(details)
-    if detect_corruption:
-        is_corrupt = is_csv_corrupt(FILENAME)
-        is_corrupt_str = '' if is_corrupt else 'no'
-        print('El archivo', is_corrupt_str, 'es corrupto')
-
-    end_time = time.time()
-    total_time = end_time - start_time
-
-    timedelta = format_time(total_time)
-    print('Tiempo total de ejecución:', timedelta)
-
-def format_time(seconds: float):
-    return datetime.timedelta(seconds=seconds)
-
-category_urls = [
-    
-]
-
-with open('categories.txt', 'r+') as f:
-    category_urls = [ line.strip() for line in f.readlines() ]
-
-# Introducir los productos que no se han podido descargar en la iteración
-# TODO: implementar un append al CSV cuando se pasen productos como argumento
-products = [
-    'https://www.thewhiskyexchange.com/p/19887/high-west-campfire',
-    'https://www.thewhiskyexchange.com/p/62334/kurayoshi-pure-malt',
-]
-
-# DEBUG = True
-DEBUG = False
-# 0:01:51.676625 con el debug a true   544 lineas
-# 0:01:41.111771 con el debug a false  522 lineas
-scrape(limit = ALL, save_imgs=False, display=False, category_urls=category_urls, detect_corruption=False)
-
-# TODO:
-# mirar cómo implementar la paginación para que me funcione bien
-# mejorar el sistema de threadify para que no sea tan abrupto y se vaya rellenando y vaciando automáticamente
-  # https://stackoverflow.com/questions/35160417/threading-queue-working-example
-  # https://gist.github.com/amirasaran/e91c7253c03518b8f7b7955df0e954bb # ejemplo de clase con callback al finalizar
-  # probar también a que el hilo vaya en otro lado, es decir, sea otro threading para llamar al threadify, y solo se pare en puntos críticos
-# arreglar el limit de los productos cuando se hace un threadify
-# hay un bug cuando category_urls no funciona con menos de dos elementos en el array si se pasa por parámetro, pasa en otros sitios también
-# hacer fichero con las categorías, con un paginate como opcional
-# fifo dos hilos separados y evento de cuando se añada un nuevo elemento
-# refactor de los DOWNLOAD_ATTEMPTS para que sea una única función la que lo contorle con los parámetros necesarios
-# tal vez se podría hacer que se hiciese una única función de búsqueda por CSS para agilizar el proceso
     if save_imgs:
         if DEBUG: print('\nSe descargan las imágenes\n')
         save_images(details)
@@ -586,6 +573,3 @@ USE_THREADS = False
 # 0:01:41.111771 con el debug a false  522 lineas
 scrape(limit = ALL, save_imgs=False, display=False, category_urls=category_urls, detect_corruption=False)
 # scrape(limit = 3, save_imgs=False, display=False, category_urls=category_urls[:2], detect_corruption=False)
-
-# TODO: realmente merece la pena implementar un sistema de uses_threads en el sistema normal?
-# TODO: optimizarlo haciendo una única macron consulta CSS para que no tarde tanto en procesarlo? aunque tal vez al hacer eso tarde incluso más
