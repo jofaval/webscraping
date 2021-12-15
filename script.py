@@ -54,9 +54,9 @@ from requests.models import Response
 # source
 # https://www.freecodecamp.org/news/scraping-ecommerce-website-with-python/
 
-# |----------------------------------------|
-# |               CONSTANTES               |
-# |----------------------------------------|
+# |---------------------------------------|
+# |               CONSTANTS               |
+# |---------------------------------------|
 
 basedir = os.path.dirname(__file__)
 # basedir = os.path.join('kunden', basedir, 'webscrapping', 'big-data-aplicados')
@@ -102,7 +102,7 @@ REQUEST_SESSION = requests.Session()
 USE_THREADS = False
 
 # |-----------------------------------------|
-# |                 MÉTODOS                 |
+# |                 METHODS                 |
 # |-----------------------------------------|
 
 def is_null(val): return val is None
