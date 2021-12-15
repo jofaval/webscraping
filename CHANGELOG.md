@@ -10,6 +10,7 @@ All the log of changes on the project/repository
 ### Modified
 - Updated a little bit more the README.md, a lot left to explain
 - Comments translated from Spanish to English using Google Translate
+- Renamed script from "webscrapping.py" to "script.py"
 
 ## 2021-12-14
 ### Added
