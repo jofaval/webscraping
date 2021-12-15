@@ -5,6 +5,7 @@ All the log of changes on the project/repository
 ### Added
 - Webscrapping
   - Uploaded raw versions, cleaning and refactoring left to do
+- All the previous log on the CHANGELOG (as accurate as possible)
 
 ### Modified
 - Updated a little bit more the README.md, a lot left to explain
