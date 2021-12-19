@@ -4,6 +4,7 @@ All the log of changes on the project/repository
 ## 2021-12-19
 ### Added
 - Created first wiki page
+- Create CHANGELOG wiki page
 
 ### Modified
 - Greatly improve README.md
