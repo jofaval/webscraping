@@ -26,7 +26,7 @@ or\
 `/usr/bin/python3 /my/working/directory/script.py`
 
 #### Tip
-You can always modify de `THREADS_LIMIT` constant to update the number of *workers* (threads) that will be executed simultaneously. It can really speed up the process, but only if you're computer does allow the number you're inputing.\
+You can always modify de `THREADS_LIMIT` constant to update the number of *workers* (threads) that will be executed simultaneously. It can really speed up the process, but only if you're computer does allow the number you're inputing.
 
 For example, I have 8 virtual cores, but 50 *workers* work perfectly fine, more slows it, less are not enough.
 
@@ -50,16 +50,17 @@ The important parts to modify on this scraper, at the moment of writting the REA
 - `get_category_products`: if your page does allow for pagination without JS, it should be implemented here.
 
 ### How to deploy?
-You'll need the use of cron (UNIX based OS, not tested on Windows OS)\¡. For a cron to work you need to use full paths (the /usr/bin/... command) otherwise it won't work.
-\
-And you'd need to specify the time it will execute at, 1 AM, 4 AM (the on I used), 9 AM\
+You'll need the use of cron (UNIX based OS, not tested on Windows OS).
+For a cron to work you need to use absolute paths (the /usr/bin/... command) otherwise it won't work.
+
+And you'd need to specify the time it will execute at, 1 AM, 4 AM (the on I used), 9 AM
 
 #### Cron example
 `0 4 * * * /usr/bin/python3 /my/working/directory/script.py`\
-It will execute *everyday* at exactly 4:00 AM *forever*.\
+It will execute *everyday* at exactly 4:00 AM *forever*.
 
 Now with a more real path:
-`0 4 * * * /usr/bin/python3 /home/username/webscraping/script.py`\
+`0 4 * * * /usr/bin/python3 /home/username/webscraping/script.py`
 
 ## Testing
 Run them individually, modify the limit so it only downloads N number of categories or products, just to check if it works.\
