@@ -34,20 +34,20 @@ For example, I have 8 virtual cores, but 50 *workers* work perfectly fine, more 
 The basis of webscraping you'd have to replicate what a use would do to check prices and products.
 
 The important parts to modify on this scraper, at the moment of writting the README 2021-19-12, are:
-- `FIELDS`: all the fields to download
-  - `name`: the dict `key`, the name of the field to download, the label.
-  - `query`: the CSS query from which to get the element(s). NOT tested with multiple queries at once.
-  - `parser`: the function to parse the data recieved, if used, this will override the default data retrieval
-  - `default`: doesn't matter if it's using a parser or not, the default value if the given value is `None`
-- `CATEGORY_LINK_QUERY`: the CSS query to get all the category links
-- `is_category_url`: wether a url is a category url
-- `is_product_url`: wether a url is a product url
-- `CATEGORY_PRODUCT_LINK_QUERY`: the CSS to get all the product links in a category.
-- `BASE_DOMAIN`: the base domain of the website, just the base path of the domain, i.e., `google.com/es` would also work
-- `IMG_DOMAIN`: the base domain of the images. Some websites use different domains for their images
-- `RETRY`: will it attempt to redownload a failed download? It will by default
-- `DOWNLOAD_ATTEMPTS`: how many times do you want to retry? 3 by default
-- `get_category_products`: if your page does allow for pagination without JS, it should be implemented here.
+- `FIELDS` all the fields to download
+  - `name` the dict `key`, the name of the field to download, the label.
+  - `query` the CSS query from which to get the element(s). NOT tested with multiple queries at once.
+  - `parser` the function to parse the data recieved, if used, this will override the default data retrieval
+  - `default` doesn't matter if it's using a parser or not, the default value if the given value is `None`
+- `CATEGORY_LINK_QUERY` the CSS query to get all the category links
+- `is_category_url` wether a url is a category url
+- `is_product_url` wether a url is a product url
+- `CATEGORY_PRODUCT_LINK_QUERY` the CSS to get all the product links in a category.
+- `BASE_DOMAIN` the base domain of the website, just the base path of the domain, i.e., `google.com/es` would also work
+- `IMG_DOMAIN` the base domain of the images. Some websites use different domains for their images
+- `RETRY` will it attempt to redownload a failed download? It will by default
+- `DOWNLOAD_ATTEMPTS` how many times do you want to retry? 3 by default
+- `get_category_products` if your page does allow for pagination without JS, it should be implemented here.
 
 ### How to deploy?
 You'll need the use of cron (UNIX based OS, not tested on Windows OS).
