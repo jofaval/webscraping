@@ -1,6 +1,10 @@
 # CHANGELOG #
 All the log of changes on the project/repository
 
+## 2021-12-19
+### Modified
+- Greatly improve README.md
+
 ## 2021-12-15
 ### Added
 - Webscrapping
