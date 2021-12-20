@@ -61,7 +61,7 @@ All the log of changes on the project/repository
 - Cleaned and reestructured a little bit the code
 
 ## 2021-11-01
-## Added
+### Added
 - FIELDS system implementation for a dict of fields to scrape
 
 ### Modified
