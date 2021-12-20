@@ -5,6 +5,7 @@ All the log of changes on the project/repository
 ### Added
 - Created first wiki page
 - Create CHANGELOG wiki page
+- Add LICENSE.md
 
 ### Modified
 - Greatly improve README.md
