@@ -49,6 +49,8 @@ The important parts to modify on this scraper, at the moment of writting the REA
 - `DOWNLOAD_ATTEMPTS` how many times do you want to retry? 3 by default.
 - `get_category_products` if your page does allow for pagination without JS, it should be implemented here.
 
+*To see it fully implemented, fully realized, take a look at [`websites/thewhiskyexchange/configuration.py`](./websites/thewhiskyexchange/configuration.py)*
+
 ### How to deploy?
 You'll need the use of cron (UNIX based OS, not tested on Windows OS).
 For a cron to work you need to use absolute paths (the /usr/bin/... command) otherwise it won't work.
