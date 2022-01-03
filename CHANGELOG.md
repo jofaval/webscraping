@@ -1,6 +1,16 @@
 # CHANGELOG #
 All the log of changes on the project/repository
 
+## 2022-01-02
+### Added
+- `main.py` folder as a sort of `decorator` or `orchestrator` for all the scraping
+- Properly and fully implement `CONF` dict usage with a `main` `orchestrator` and separate sites configurations
+
+## 2021-12-20
+### Modified
+- Define some of the `CONF` dict base structure
+- Change all the constant calls, they now use the `CONF` dict
+
 ## 2021-12-19
 ### Added
 - Created first wiki page

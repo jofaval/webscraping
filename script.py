@@ -4,6 +4,8 @@
 # CRON CONFIGURATION
 # 0 4 * * * /usr/bin/python3 /home/user/johndoe/webscrapping.py
 
+# Last modification: 20/12/2021 2:17
+
 MODULES = [
     'requests',
     'bs4',
@@ -58,48 +60,74 @@ from requests.models import Response
 # |               CONSTANTS               |
 # |---------------------------------------|
 
-basedir = os.path.dirname(__file__)
 # basedir = os.path.join('kunden', basedir, 'webscrapping', 'big-data-aplicados')
 true = True
 false = False
-
-# It is the toggle to know if follow-up prints will be printed or not
-DEBUG = False
-BASE_DOMAIN = 'www.thewhiskyexchange.com'
-BASE_URL = 'https://' + BASE_DOMAIN
-
-IMG_DOMAIN = 'img.thewhiskyexchange.com'
-BASE_IMG_URL = 'https://' + IMG_DOMAIN
-
-# URL = 'https://tienda.consum.es/es/p/mistela-moscatel-do-valencia/72280'
-# URL = 'https://www.thewhiskyexchange.com/p/43320/renegade-gin'
-URL = BASE_URL
-
-# SITEMAP = 'https://tienda.consum.es/sitemap.xml'
-HEADERS = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36' }
-TIMEOUT = (3.05, 27)
-# PARSER = 'html.parser'
-# lxml works much faster than html.parser
-PARSER = 'lxml'
-
-# FILENAME = 'data.csv'
-# FILENAME = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S") + '.csv'
-FILENAME = '' + datetime.datetime.now().strftime("%d-%m-%Y") + '.csv'
-IMG_DIR = 'img'
-
-RETRY = True
-DOWNLOAD_ATTEMPTS = 3
-# If you do not want to try again, the attempts become 1 (the first time)
-if not RETRY: DOWNLOAD_ATTEMPTS = 1
-
 
 # Speeds up HTTP request requests by reusing the session that is opened in the first request
 # each normal request creates a new session, in this way the same session will always be used
 # https://thehftguy.com/2020/07/28/making-beautifulsoup-parsing-10-times-faster/
 REQUEST_SESSION = requests.Session()
 
-# Control the use of Threads in the system
-USE_THREADS = False
+BASE_DOMAIN = 'www.thewhiskyexchange.com'
+BASE_URL = 'https://' + BASE_DOMAIN
+
+IMG_DOMAIN = 'img.thewhiskyexchange.com'
+BASE_IMG_URL = 'https://' + IMG_DOMAIN
+
+DOWNLOAD_ATTEMPTS = 3
+ALL = -1
+
+# TODO: implement conf json script py, and callbacks
+CONF = {
+    'basedir': os.path.dirname(__file__),
+    'DEBUG': False,
+    'BASE_DOMAIN': 'www.thewhiskyexchange.com',
+    'BASE_URL': 'https://' + BASE_DOMAIN,
+    'IMG_DOMAIN': 'img.thewhiskyexchange.com',
+    'BASE_IMG_URL': 'https://' + IMG_DOMAIN,
+    'URL': BASE_URL,
+    'HEADERS': { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36' },
+    'TIMEOUT': (3.05, 27),
+    'PARSER': 'lxml',
+    'FILENAME': '' + datetime.datetime.now().strftime("%d-%m-%Y") + '.csv',
+    'IMG_DIR': 'img',
+    'RETRY': True,
+    'DOWNLOAD_ATTEMPTS': 3,
+
+    'USE_THREADS': True,
+    'EMPTY_VALUE': " ",
+    'CATEGORY_JOINER': ">",
+    'URL_ID_START': '/p/',
+    'URL_ID_END': '/',
+    'CATEGORY_LINK_QUERY': 'a.subnav__link, a.navbar__link',
+    'CATEGORY_PRODUCT_LINK_QUERY': 'a.product-card',
+    'SEPARATOR': ";",
+    'FILE_NEWLINE': "\n",
+    'DATA_FOLDER': 'data',
+    'EXTRA_START_COLUMNS': ['id'],
+    'EXTRA_END_COLUMNS': ['url'],
+    'MAX_IMG_DOWNLOAD_ATTEMPTS': DOWNLOAD_ATTEMPTS,
+    'LOG_FILE': 'error.log',
+    'THREADS': [],
+    # 10 is going great, 15 is getting too much, and 6 is getting too little,
+    # WORKERS,
+    'THREADS_LIMIT': 25,
+    'MAX_PRODUCT_DOWNLOAD_ATTEMPTS': DOWNLOAD_ATTEMPTS,
+    'MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS': DOWNLOAD_ATTEMPTS,
+    'ALL': -1,
+
+    # The scrape() args, default values
+    'category_limit': ALL,
+    'product_limit': ALL,
+    'limit': ALL,
+    'as_csv': True,
+    'save_imgs': True,
+    'display': False,
+    'category_urls': None,
+    'products': None,
+    'detect_corruption': True,
+}
 
 # |-----------------------------------------|
 # |                 METHODS                 |
@@ -116,22 +144,20 @@ cls()
 def create_folder_if_not_exists(folder):
     if not os.path.exists(folder): os.makedirs(folder)
 
-create_folder_if_not_exists(IMG_DIR)
-
 def is_success(res: Response):
     return not (res.status_code < 200 | res.status_code >= 300)
 
 def get_page(url: str, display: bool = True):
-    if DEBUG: print('Se va a recuperar el contenido de la página', url)
+    if CONF['DEBUG']: print('Se va a recuperar el contenido de la página', url)
 
     if not (validators.url(url)):
-        if DEBUG: print('La URL no es válida, no se ha podido descargar el contenido')
+        if CONF['DEBUG']: print('La URL no es válida, no se ha podido descargar el contenido')
         return ''
 
-    with closing( REQUEST_SESSION.get(url, timeout=TIMEOUT, headers=HEADERS, stream=True) ) as res:
+    with closing( REQUEST_SESSION.get(url, timeout=CONF['TIMEOUT'], headers=CONF['HEADERS'], stream=True) ) as res:
         # The answer has failed
         if not is_success(res):
-            if DEBUG: print('No se ha podido recuperar el contenido de la página correctamente')
+            if CONF['DEBUG']: print('No se ha podido recuperar el contenido de la página correctamente')
             return ''
 
         # If the .text is returned and not the .content, the return of binary values ​​is avoided
@@ -140,18 +166,16 @@ def get_page(url: str, display: bool = True):
 
         return html
 
-EMPTY_VALUE = " "
 def add_detail(dict: dict, name: str, value: any = None):
-    if is_null(value): value = EMPTY_VALUE
+    if is_null(value): value = CONF['EMPTY_VALUE']
     dict[name] = value
 
-CATEGORY_JOINER = ">"
 def parse_category(element):
     categories = element[0].select('li')
     # The first value will always be "Home", and the last the name of the product.
     categories = categories[1:-1]
 
-    return CATEGORY_JOINER.join([l.text for l in categories])
+    return CONF['CATEGORY_JOINER'].join([l.text for l in categories])
 
 def parse_img(element):
     if (len(element) <= 0): return None
@@ -218,11 +242,9 @@ def get_content(url: str = None, content: str = None):
 
     return content
 
-URL_ID_START = '/p/'
-URL_ID_END = '/'
 def get_url_id(url: str):
-    start = url.find(URL_ID_START) + len(URL_ID_START)
-    end = url.rfind(URL_ID_END)
+    start = url.find(CONF['URL_ID_START']) + len(CONF['URL_ID_START'])
+    end = url.rfind(CONF['URL_ID_END'])
     id = url[start:end]
 
     return id
@@ -230,9 +252,9 @@ def get_url_id(url: str):
 def get_product_details(url: str = None, content: str = None):
     content = get_content(url, content)
     if is_null(content): return None
-    if DEBUG: print('Se van a recuperar los detalles de una página de producto', url)
+    if CONF['DEBUG']: print('Se van a recuperar los detalles de una página de producto', url)
 
-    soup = BeautifulSoup(content, features=PARSER)
+    soup = BeautifulSoup(content, features=CONF['PARSER'])
 
     row = {}
     row['id'] = get_url_id(url)
@@ -240,87 +262,79 @@ def get_product_details(url: str = None, content: str = None):
         get_detail(soup, row, name)
     row['url'] = url
 
-    if DEBUG: print('Ya se han recuperado los detalles')
+    if CONF['DEBUG']: print('Ya se han recuperado los detalles')
 
     return row
 
 def is_category_url(url):
     return str(url).startswith('/c')
 
-CATEGORY_LINK_QUERY = 'a.subnav__link, a.navbar__link'
 def get_categories(url: str = None, content: str = None):
     content = get_content(url, content)
     if is_null(content): return None
-    if DEBUG: print('Se recuperan las categorías')
+    if CONF['DEBUG']: print('Se recuperan las categorías')
 
-    soup = BeautifulSoup(content, features=PARSER)
-    category_tags = soup.select(CATEGORY_LINK_QUERY)
+    soup = BeautifulSoup(content, features=CONF['PARSER'])
+    category_tags = soup.select(CONF['CATEGORY_LINK_QUERY'])
 
     categories = [ c_tag.get('href') for c_tag in category_tags if is_category_url(c_tag.get('href')) ]
 
     categories = [ BASE_URL + c for c in categories ]
-    if DEBUG: print('Se han recuperado un total de:', len(categories), 'categoría(s)')
+    if CONF['DEBUG']: print('Se han recuperado un total de:', len(categories), 'categoría(s)')
     return categories
 
 def is_product_url(url: str):
     return str(url).startswith('/p')
 
-CATEGORY_PRODUCT_LINK_QUERY = 'a.product-card'
 def get_category_products(url: str = None, content: str = None):
     content = get_content(url, content)
     if is_null(content): return None
-    if DEBUG: print('Se recuperan los productos de la categoría')
+    if CONF['DEBUG']: print('Se recuperan los productos de la categoría')
 
-    soup = BeautifulSoup(content, features=PARSER)
+    soup = BeautifulSoup(content, features=CONF['PARSER'])
     products = set()
 
-    category_product_tags = soup.select(CATEGORY_PRODUCT_LINK_QUERY)
+    category_product_tags = soup.select(CONF['CATEGORY_PRODUCT_LINK_QUERY'])
 
     products = set([ c_tag.get('href') for c_tag in category_product_tags if is_product_url(c_tag.get('href')) ])
     # TODO: add a condition for the BASE_URL but bear in mind that it is expected to return a list
     products = [ BASE_URL + p for p in list(products) ]
 
-    if DEBUG: print('Se han recuperado un total de:', len(products), 'producto(s)')
+    if CONF['DEBUG']: print('Se han recuperado un total de:', len(products), 'producto(s)')
     # maybe you could force a return of list here to work properly
     return products
 
-SEPARATOR = ";"
-FILE_NEWLINE = "\n"
-DATA_FOLDER = 'data'
-EXTRA_START_COLUMNS = ['id']
-EXTRA_END_COLUMNS = ['url']
 def save_csv(data: list):
-    if DEBUG: print('Se guarda el contenido en un fichero .csv', FILENAME)
+    if CONF['DEBUG']: print('Se guarda el contenido en un fichero .csv', CONF['FILENAME'])
     # keys = ['id'] + list(FIELDS.keys())
-    keys = EXTRA_START_COLUMNS + list(FIELDS.keys()) + EXTRA_END_COLUMNS
+    keys = CONF['EXTRA_START_COLUMNS'] + list(FIELDS.keys()) + CONF['EXTRA_END_COLUMNS']
     # keys = list(FIELDS.keys())
 
-    filename = os.path.join(basedir, DATA_FOLDER, FILENAME)
-    create_folder_if_not_exists(DATA_FOLDER)
+    filename = os.path.join(CONF['basedir'], CONF['DATA_FOLDER'], CONF['FILENAME'])
+    create_folder_if_not_exists(os.path.join(CONF['basedir'], CONF['DATA_FOLDER']))
     with open(filename, 'w+', 2, 'utf-8') as file:
-        file.write(SEPARATOR.join(['\"' + k + '\"' for k in keys]))
-        file.write(FILE_NEWLINE)
+        file.write(CONF['SEPARATOR'].join(['\"' + k + '\"' for k in keys]))
+        file.write(CONF['FILE_NEWLINE'])
 
         for row in data:
-            values = list([x.replace(FILE_NEWLINE, EMPTY_VALUE) for x in row.values()])
-            file.write(SEPARATOR.join(values))
-            file.write(FILE_NEWLINE)
+            values = list([x.replace(CONF['FILE_NEWLINE'], CONF['EMPTY_VALUE']) for x in row.values()])
+            file.write(CONF['SEPARATOR'].join(values))
+            file.write(CONF['FILE_NEWLINE'])
 
 def get_image_filename(url: str):
     return str(url).replace(BASE_IMG_URL, '').replace('/', '_')
 
-MAX_IMG_DOWNLOAD_ATTEMPTS = DOWNLOAD_ATTEMPTS
 def download_img(url: str):
-    for attempt in range(0, MAX_IMG_DOWNLOAD_ATTEMPTS):
+    for attempt in range(0, CONF['MAX_IMG_DOWNLOAD_ATTEMPTS']):
         try:
             filename = get_image_filename(url)
 
             img_content = requests.get(url, stream = True)
             img_content.raw.decode_content = True
-            with open(os.path.join(IMG_DIR, filename), "wb") as img_file:
+            with open(os.path.join(CONF['IMG_DIR'], filename), "wb") as img_file:
                 shutil.copyfileobj(img_content.raw, img_file)
 
-            if DEBUG: print('Se ha descargado la imagen', filename)
+            if CONF['DEBUG']: print('Se ha descargado la imagen', filename)
 
             break
         except:
@@ -332,14 +346,13 @@ def get_now():
 def get_timestamp_str():
     return '[' + get_now() + ']'
 
-LOG_FILE = 'error.log'
 def log_error(data):
-    with open(LOG_FILE, 'a+') as log:
+    with open(CONF['LOG_FILE'], 'a+') as log:
         log.write(get_timestamp_str() + ' ' + str(data))
-        log.write(FILE_NEWLINE)
+        log.write(CONF['FILE_NEWLINE'])
 
 def save_images(data: list):
-    if DEBUG: print('Se empiezan a descargar todas las imágenes de los productos')
+    if CONF['DEBUG']: print('Se empiezan a descargar todas las imágenes de los productos')
 
     no_img_download = []
 
@@ -351,7 +364,7 @@ def save_images(data: list):
         percentage = (index / rows) * 100
 
         img_url = row['img']
-        if DEBUG: print('Se va a intentar descargar la imagen', img_url)
+        if CONF['DEBUG']: print('Se va a intentar descargar la imagen', img_url)
 
         # The images of customizable products are not downloaded, they would be by hand
         try:
@@ -360,52 +373,46 @@ def save_images(data: list):
             threadify(target=download_img, args=(img_url,))
         except:
             log_error('No se ha podido descargar la imagen del producto: ' + str(row['url']))
-            if DEBUG: print('NO se ha podido descargar la imagen', img_url, row['url'])
+            if CONF['DEBUG']: print('NO se ha podido descargar la imagen', img_url, row['url'])
             no_img_download.append(row)
         finally:
-            if DEBUG: print('Porcentaje de descarga de imágenes (', str(index) + '/' + str(rows), ')', percentage, '%')
+            if CONF['DEBUG']: print('Porcentaje de descarga de imágenes (', str(index) + '/' + str(rows), ')', percentage, '%')
     
     wait_for_all_threads()
 
-    if DEBUG: print('Ya se han descargado las imágenes de todos los productos')
+    if CONF['DEBUG']: print('Ya se han descargado las imágenes de todos los productos')
     not_downloaded = len(no_img_download)
-    if not_downloaded & DEBUG: print('No se ha(n) podido descargar la(s) imágen(es) de', not_downloaded, 'producto(s)')
+    if not_downloaded & CONF['DEBUG']: print('No se ha(n) podido descargar la(s) imágen(es) de', not_downloaded, 'producto(s)')
 
 def empty_threads():
-    del THREADS[:THREADS_LIMIT]
+    del CONF['THREADS'][:CONF['THREADS_LIMIT']]
 
 def wait_for_all_threads(empty = True, warning = True):
     # Wait for all threads to finish before moving on to the next
-    for thread in THREADS:
+    for thread in CONF['THREADS']:
         thread.join()
 
-    if warning & DEBUG: print('\nSe espera a que terminen el resto de hilos\n')
+    if warning & CONF['DEBUG']: print('\nSe espera a que terminen el resto de hilos\n')
     if empty: empty_threads()
-
-THREADS = []
-# 10 is going great, 15 is getting too much, and 6 is getting too little
-# WORKERS
-THREADS_LIMIT = 25
 
 def threadify(target, args: tuple):
     # Guard close para evitar errores si solo se pasa un parámetro
     # if type(args) != tuple: args = tuple(args)
 
     # It is expected before executing more, in this way the limit works correctly
-    if (len(THREADS) >= THREADS_LIMIT):
+    if (len(CONF['THREADS']) >= CONF['THREADS_LIMIT']):
         # TODO: find a way to avoid doing a wait_all
         wait_for_all_threads()
 
     thread = threading.Thread(target=target, args=args)
     thread.start()
-    THREADS.append(thread)
+    CONF['THREADS'].append(thread)
 
-MAX_PRODUCT_DOWNLOAD_ATTEMPTS = DOWNLOAD_ATTEMPTS
 def product_to_thread(data):
     details, product = data
 
     # A loop is made so that the download is attempted n number of times
-    for attempt in range(0, MAX_PRODUCT_DOWNLOAD_ATTEMPTS):
+    for attempt in range(0, CONF['MAX_PRODUCT_DOWNLOAD_ATTEMPTS']):
         try:
             product_detail = get_product_details(product)
             details.append(product_detail)
@@ -413,13 +420,12 @@ def product_to_thread(data):
         except:
             log_error(f'No se ha podido descargar el producto {product}, {attempt + 1}º intento')
 
-MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS = DOWNLOAD_ATTEMPTS
 # def category_products_to_thread(products: set, category_url: str, product_limit: int, limit: int):
 def category_products_to_thread(data):
     products, category_url, product_limit, limit = data
 
     product_urls = []
-    for attempt in range(0, MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS):
+    for attempt in range(0, CONF['MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS']):
         try:
             product_urls = get_category_products(category_url)
         except:
@@ -440,11 +446,11 @@ def category_products_to_thread(data):
 def is_csv_corrupt(filename: str):
     # If it is not CSV, it is forced
     if not str(filename).endswith('.csv'): filename = f'{filename}.csv'
-    file_path = os.path.join(DATA_FOLDER, filename)
+    file_path = os.path.join(CONF['basedir'], CONF['DATA_FOLDER'], filename)
 
     with open(file_path, 'r+') as fr:
         content = fr.read()
-        content_lines = content.split(FILE_NEWLINE)
+        content_lines = content.split(CONF['FILE_NEWLINE'])
 
     # TODO: optimize so that it does not use set if it does not compare line by line with the previous ones?
     # It seeks to detect all those lines that are repeated in the CSV
@@ -452,7 +458,6 @@ def is_csv_corrupt(filename: str):
 
     return len(content_lines) != len(lines)
 
-ALL = -1
 def scrape(
     category_limit: int = ALL,
     product_limit: int = ALL,
@@ -470,7 +475,7 @@ def scrape(
 
     # If it has not been passed by parameter, they are retrieved from the page
     if is_null(category_urls):
-        category_urls = get_categories(URL) if was_products_empty else []
+        category_urls = get_categories(CONF['URL']) if was_products_empty else []
     # It is ensured that there will be no repeating categories
     category_urls = list( set(category_urls) )
 
@@ -487,7 +492,7 @@ def scrape(
     if len(category_urls) > 1 & limit != ALL:
         category_urls = category_urls[:category_limit]
 
-    # if DEBUG: print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
+    # if CONF['DEBUG']: print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
     print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
 
     # First, the links of all the products are retrieved, taking into account each of the limits
@@ -495,17 +500,17 @@ def scrape(
     if was_products_empty:
         categories_args = [(products, category_url, product_limit, limit) for category_url in category_urls]
 
-        if not USE_THREADS:
+        if not CONF['USE_THREADS']:
             # Wireless version
             [category_products_to_thread(data) for data in categories_args]
         else:
             # String version
-            with ThreadPoolExecutor(THREADS_LIMIT) as executor:
+            with ThreadPoolExecutor(CONF['THREADS_LIMIT']) as executor:
                 executor.map(category_products_to_thread, categories_args)
                 executor.shutdown()
 
     # print('category_urls', products, categories_args)
-    # if DEBUG: print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
+    # if CONF['DEBUG']: print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
     print('\nRecuperando los detalles de los productos\n', len(products), 'producto(s)\n')
 
     # With threads it is possible to exceed the limit, so force
@@ -513,12 +518,12 @@ def scrape(
 
     products_args = [(details, p) for p in products]
 
-    if not USE_THREADS:
+    if not CONF['USE_THREADS']:
         # Wireless version
         [product_to_thread(data) for data in products_args]
     else:
         # And then they go through each of the products recovering their information
-        with ThreadPoolExecutor(THREADS_LIMIT) as executor:
+        with ThreadPoolExecutor(CONF['THREADS_LIMIT']) as executor:
             # print('trying', products_args)
             executor.map(product_to_thread, products_args)
             executor.shutdown()
@@ -530,14 +535,14 @@ def scrape(
         # df.to_csv(FILENAME, SEPARATOR, EMPTY_VALUE)
 
     if as_csv:
-        # if DEBUG: print ('\nSave as CSV\n', len (details), 'line(s)\n')
+        # if CONF['DEBUG']: print ('\nSave as CSV\n', len (details), 'line(s)\n')
         print('\nSe guarda como CSV\n', len(details), 'línea(s)\n')
         save_csv(details)
     if save_imgs:
-        if DEBUG: print('\nSe descargan las imágenes\n')
+        if CONF['DEBUG']: print('\nSe descargan las imágenes\n')
         save_images(details)
     if detect_corruption:
-        is_corrupt = is_csv_corrupt(FILENAME)
+        is_corrupt = is_csv_corrupt(CONF['FILENAME'])
         is_corrupt_str = '' if is_corrupt else 'no'
         print('El archivo', is_corrupt_str, 'es corrupto')
 
@@ -550,25 +555,29 @@ def scrape(
 def format_time(seconds):
     return datetime.timedelta(seconds=seconds)
 
-category_urls = [
+# Execute only if wanted so, not on import
+if (__name__ == '__main__'):
+    scrape(limit = ALL, save_imgs=False, display=False, category_urls=CONF['category_urls'], detect_corruption=False)
+
+def set_configuration(configuration: dict) -> dict:
+    """
+    Sets the configuration values to use
+
+    configuration : dict
+        The dictionary object of key, values
+
+    returns dict
+    """
+
+    # Set ALL the configuration values
+    for key, value in configuration.items():
+        CONF[key] = value
+
+    # If no retrys are allowed, only one attempt per category/product
+    if not CONF['RETRY']: CONF['DOWNLOAD_ATTEMPTS'] = 1
+
+    # Create the folders if they don't exist here
+    create_folder_if_not_exists(os.path.join(CONF['basedir'], CONF['IMG_DIR']))
+    create_folder_if_not_exists(os.path.join(CONF['basedir'], CONF['DATA_FOLDER']))
     
-]
-
-categories_filepath = os.path.join(basedir, 'categories.txt')
-with open(categories_filepath, 'r+') as f:
-    category_urls = [ line.strip() for line in f.readlines() ]
-
-# Enter the products that could not be downloaded in the iteration
-# TODO: implement an append to the CSV when products are passed as an argument
-products = [
-    'https://www.thewhiskyexchange.com/p/19887/high-west-campfire',
-    'https://www.thewhiskyexchange.com/p/62334/kurayoshi-pure-malt',
-]
-
-# DEBUG = True
-DEBUG = False
-USE_THREADS = False
-# 0:01:51.676625 with debug to true 544 lines
-# 0:01:41.111771 with debug to false 522 lines
-scrape(limit = ALL, save_imgs=False, display=False, category_urls=category_urls, detect_corruption=False)
-# scrape(limit = 3, save_imgs=False, display=False, category_urls=category_urls[:2], detect_corruption=False)
+    return CONF
