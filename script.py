@@ -127,6 +127,9 @@ CONF = {
     'category_urls': None,
     'products': None,
     'detect_corruption': True,
+    'FIELDS': {},
+    'is_category_url': lambda x: True,
+    'is_product_url': lambda x: True,
 }
 
 # |-----------------------------------------|
@@ -170,43 +173,6 @@ def add_detail(dict: dict, name: str, value: any = None):
     if is_null(value): value = CONF['EMPTY_VALUE']
     dict[name] = value
 
-def parse_category(element):
-    categories = element[0].select('li')
-    # The first value will always be "Home", and the last the name of the product.
-    categories = categories[1:-1]
-
-    return CONF['CATEGORY_JOINER'].join([l.text for l in categories])
-
-def parse_img(element):
-    if (len(element) <= 0): return None
-
-    img = element[0]
-    src = img.get('src')
-    if is_null(src): src = img.get('data-original')
-
-    return src
-
-def parse_price_prev(element, default = '£0.00'):
-    if not element: return default
-
-    price_prev = element[0].text
-
-    price_prev = price_prev.replace('(Was ')
-    price_prev = price_prev.replace(')')
-
-    return price_prev
-
-FIELDS = {
-    'name'       : { 'query': '.product-main__name'                 , 'parser': None            , 'default': 'Sin nombre'           },
-    'price'      : { 'query': '.product-action__price'              , 'parser': None            , 'default': '£0.00'                },
-    'price_prev' : { 'query': '.product-offer__price'               , 'parser': parse_price_prev, 'default': '£0.00'                },
-    'description': { 'query': '.product-main__description'          , 'parser': None            , 'default': 'Sin descripción'      },
-    'img'        : { 'query': '.product-main__image-container img'  , 'parser': parse_img       , 'default': 'Imagen no encontrada' },
-    'category'   : { 'query': '.breadcrumb__list'                   , 'parser': parse_category  , 'default': 'Sin categoría'        },
-    'unit'       : { 'query': '.product-main__data'                 , 'parser': None            , 'default': 'Sin unidad'           },
-    'rating'     : { 'query': '.review-overview__rating.star-rating', 'parser': None            , 'default': 'Sin valoración'       },
-}
-
 def get_value(field, element):
     # If the field has a parse function, it is used
     if (('parser' in field) & (not is_null(field['parser']))):
@@ -226,7 +192,7 @@ def get_value(field, element):
 def get_detail(soup, dictionary: dict, name: str):
     # print('Attempt to retrieve field', name)
 
-    field = FIELDS[name] if name in FIELDS else " "
+    field = CONF['FIELDS'][name] if name in CONF['FIELDS'] else " "
     query = field['query']
     element = soup.select(query)
 
@@ -258,16 +224,13 @@ def get_product_details(url: str = None, content: str = None):
 
     row = {}
     row['id'] = get_url_id(url)
-    for name in FIELDS:
+    for name in CONF['FIELDS']:
         get_detail(soup, row, name)
     row['url'] = url
 
     if CONF['DEBUG']: print('Ya se han recuperado los detalles')
 
     return row
-
-def is_category_url(url):
-    return str(url).startswith('/c')
 
 def get_categories(url: str = None, content: str = None):
     content = get_content(url, content)
@@ -277,14 +240,11 @@ def get_categories(url: str = None, content: str = None):
     soup = BeautifulSoup(content, features=CONF['PARSER'])
     category_tags = soup.select(CONF['CATEGORY_LINK_QUERY'])
 
-    categories = [ c_tag.get('href') for c_tag in category_tags if is_category_url(c_tag.get('href')) ]
+    categories = [ c_tag.get('href') for c_tag in category_tags if CONF['is_category_url'](c_tag.get('href')) ]
 
     categories = [ BASE_URL + c for c in categories ]
     if CONF['DEBUG']: print('Se han recuperado un total de:', len(categories), 'categoría(s)')
     return categories
-
-def is_product_url(url: str):
-    return str(url).startswith('/p')
 
 def get_category_products(url: str = None, content: str = None):
     content = get_content(url, content)
@@ -296,7 +256,7 @@ def get_category_products(url: str = None, content: str = None):
 
     category_product_tags = soup.select(CONF['CATEGORY_PRODUCT_LINK_QUERY'])
 
-    products = set([ c_tag.get('href') for c_tag in category_product_tags if is_product_url(c_tag.get('href')) ])
+    products = set([ c_tag.get('href') for c_tag in category_product_tags if CONF['is_product_url'](c_tag.get('href')) ])
     # TODO: add a condition for the BASE_URL but bear in mind that it is expected to return a list
     products = [ BASE_URL + p for p in list(products) ]
 
@@ -307,7 +267,7 @@ def get_category_products(url: str = None, content: str = None):
 def save_csv(data: list):
     if CONF['DEBUG']: print('Se guarda el contenido en un fichero .csv', CONF['FILENAME'])
     # keys = ['id'] + list(FIELDS.keys())
-    keys = CONF['EXTRA_START_COLUMNS'] + list(FIELDS.keys()) + CONF['EXTRA_END_COLUMNS']
+    keys = CONF['EXTRA_START_COLUMNS'] + list(CONF['FIELDS'].keys()) + CONF['EXTRA_END_COLUMNS']
     # keys = list(FIELDS.keys())
 
     filename = os.path.join(CONF['basedir'], CONF['DATA_FOLDER'], CONF['FILENAME'])
