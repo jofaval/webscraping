@@ -784,6 +784,42 @@ def format_time(seconds: int) -> str:
 if (__name__ == '__main__'):
     scrape(limit = ALL, save_imgs=False, display=False, category_urls=CONF['category_urls'], detect_corruption=False)
 
+# All the required fields to evaluate
+required_fields = [
+    'basedir',
+    'BASE_DOMAIN',
+    'BASE_URL',
+    'IMG_DOMAIN',
+    'BASE_IMG_URL',
+    'URL',
+    'IMG_DIR',
+    'CATEGORY_LINK_QUERY',
+    'CATEGORY_PRODUCT_LINK_QUERY',
+    'DATA_FOLDER',
+    'FIELDS',
+]
+
+def has_required_fields(configuration: dict) -> bool:
+    """
+    Checks if the configuration dictionary has ALL the required fields
+
+    configuration : dict
+        The dictionary to evaluate
+    
+    returns bool
+    """
+    # If there's no configuration given, return False
+    if not configuration: return False
+
+    # If a required field does not exist in the configuration, wether None or not,
+    # it will return False
+    for required_field in required_fields:
+        if not required_field in configuration:
+            return False
+
+    # If not proven False, it will have all the required fields
+    return True
+
 def set_configuration(configuration: dict) -> dict:
     """
     Sets the configuration values to use
@@ -793,6 +829,7 @@ def set_configuration(configuration: dict) -> dict:
 
     returns dict
     """
+    if not has_required_fields(configuration): raise Exception('Doesn\'t have all the required fields')
 
     # Set ALL the configuration values
     for key, value in configuration.items():

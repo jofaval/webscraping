@@ -5,6 +5,7 @@ All the log of changes on the project/repository
 ### Added
 - `PythonDoc` the whole `script.py` and other missing functions
 - Add `get_url_id` to the `configuration` file
+- Implement `has_required_fields` not to execute an incomplete `scraper`, with exception handling in the `orchestrator`
 
 ### Modified
 - Retyped, and add, missing data parameter types, or incorrectly put, `list` instead of `List[str]`
