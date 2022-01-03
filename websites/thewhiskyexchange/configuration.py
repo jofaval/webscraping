@@ -69,6 +69,21 @@ def is_category_url(url):
 def is_product_url(url: str):
     return str(url).startswith('/p')
 
+def get_url_id(url: str) -> str:
+    """
+    Gets the ID from the URL
+
+    url : str
+        The url from which to get the ID
+
+    returns str
+    """
+    start = url.find(CONF['URL_ID_START']) + len(CONF['URL_ID_START'])
+    end = url.rfind(CONF['URL_ID_END'])
+    id = url[start:end]
+
+    return id
+
 CONF = {
     'basedir': basedir,
     'DEBUG': False,
@@ -110,6 +125,7 @@ CONF = {
     'FIELDS': FIELDS,
     'is_category_url': is_category_url,
     'is_product_url': is_product_url,
+    'get_url_id': get_url_id,
 
     # The scrape() args, default values
     'category_limit': ALL,

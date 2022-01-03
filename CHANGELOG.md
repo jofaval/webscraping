@@ -1,6 +1,10 @@
 # CHANGELOG #
 All the log of changes on the project/repository
 
+## 2022-01-03
+### Added
+- Add `get_url_id` to the `configuration` file
+
 ## 2022-01-02
 ### Added
 - `main.py` folder as a sort of `decorator` or `orchestrator` for all the scraping

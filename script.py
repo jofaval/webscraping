@@ -214,6 +214,7 @@ def get_url_id(url: str):
     id = url[start:end]
 
     return id
+CONF['get_url_id'] = get_url_id
 
 def get_product_details(url: str = None, content: str = None):
     content = get_content(url, content)
@@ -223,7 +224,7 @@ def get_product_details(url: str = None, content: str = None):
     soup = BeautifulSoup(content, features=CONF['PARSER'])
 
     row = {}
-    row['id'] = get_url_id(url)
+    row['id'] = CONF['get_url_id'](url)
     for name in CONF['FIELDS']:
         get_detail(soup, row, name)
     row['url'] = url
