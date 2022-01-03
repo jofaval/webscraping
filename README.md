@@ -10,6 +10,11 @@ It started as such, but continued with the idea of having a complex system made 
 Always check the `domain.com/robots.txt` to check if the website allows and acknowledges the use of scrapers on their page.
 
 ## Usage
+### Disclaimer
+Websites that use, or are like React (Vue, Angular, etc.) and/or with any sort of lazy loading **won't** work properly, or at all.
+
+As with websites that use JS for something further than some really basic user interacion.
+
 ### Requirements
 - Python >= v3.6 Installed.
 - Decent Internet connection.
