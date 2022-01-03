@@ -1,5 +1,7 @@
 import os, datetime
 
+from bs4.element import ResultSet
+
 basedir = os.path.dirname(__file__)
 
 category_urls = [
@@ -26,14 +28,30 @@ BASE_IMG_URL = 'https://' + IMG_DOMAIN
 DOWNLOAD_ATTEMPTS = 3
 ALL = -1
 
-def parse_category(element):
+def parse_category(element: ResultSet) -> str:
+    """
+    Parses the 'category' field
+
+    element : ResultSet[Tag]
+        The set of HTML Elements to evaluate
+    
+    returns str
+    """
     categories = element[0].select('li')
     # The first value will always be "Home", and the last the name of the product.
     categories = categories[1:-1]
 
     return CONF['CATEGORY_JOINER'].join([l.text for l in categories])
 
-def parse_img(element):
+def parse_img(element: ResultSet) -> str:
+    """
+    Parses the 'img' field
+
+    element : ResultSet[Tag]
+        The set of HTML Elements to evaluate
+    
+    returns str
+    """
     if (len(element) <= 0): return None
 
     img = element[0]
@@ -42,7 +60,17 @@ def parse_img(element):
 
     return src
 
-def parse_price_prev(element, default = '£0.00'):
+def parse_price_prev(element: ResultSet, default: str = '£0.00') -> str:
+    """
+    Parses the 'price_prev' field
+
+    element : ResultSet[Tag]
+        The set of HTML Elements to evaluate
+    default : str
+        The default value of the field, if None was found
+    
+    returns str
+    """
     if not element: return default
 
     price_prev = element[0].text
@@ -63,10 +91,26 @@ FIELDS = {
     'rating'     : { 'query': '.review-overview__rating.star-rating', 'parser': None            , 'default': 'Sin valoración'       },
 }
 
-def is_category_url(url):
+def is_category_url(url: str) -> bool:
+    """
+    Determines wether a URL is a category URL or not
+
+    url : str
+        The URL to evaluate
+
+    returns bool
+    """
     return str(url).startswith('/c')
 
-def is_product_url(url: str):
+def is_product_url(url: str) -> bool:
+    """
+    Determines wether a URL is a product URL or not
+
+    url : str
+        The URL to evaluate
+
+    returns bool
+    """
     return str(url).startswith('/p')
 
 def get_url_id(url: str) -> str:

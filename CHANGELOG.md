@@ -3,7 +3,11 @@ All the log of changes on the project/repository
 
 ## 2022-01-03
 ### Added
+- `PythonDoc` the whole `script.py` and other missing functions
 - Add `get_url_id` to the `configuration` file
+
+### Modified
+- Retyped, and add, missing data parameter types, or incorrectly put, `list` instead of `List[str]`
 
 ## 2022-01-02
 ### Added

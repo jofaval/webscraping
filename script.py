@@ -24,6 +24,8 @@ def import_or_install(package):
 [import_or_install(module) for module in MODULES]
 
 # For requests
+from typing import List
+from bs4.element import ResultSet, Tag
 import requests
 # For parsing the HTML
 from bs4 import BeautifulSoup
@@ -136,21 +138,55 @@ CONF = {
 # |                 METHODS                 |
 # |-----------------------------------------|
 
-def is_null(val): return val is None
+def is_null(val: any) -> bool:
+    """
+    Determines wether a variable is null or not
 
-def cls():
+    val : any
+        The variable to analyze
+
+    returns bool
+    """
+    return val is None
+
+def cls() -> None:
+    """
+    Cleans the console
+
+    returns None
+    """
     os.system('cls' if os.name == 'nt' else 'clear')
 
 # The console is cleaned every time it is run
 cls()
 
-def create_folder_if_not_exists(folder):
+def create_folder_if_not_exists(folder: str) -> None:
+    """
+    Creates a folder if doesn't previously exist
+
+    returns None
+    """
     if not os.path.exists(folder): os.makedirs(folder)
 
-def is_success(res: Response):
+def is_success(res: Response) -> bool:
+    """
+    Determines wether a request was successful or not
+
+    returns bool
+    """
     return not (res.status_code < 200 | res.status_code >= 300)
 
-def get_page(url: str, display: bool = True):
+def get_page(url: str, display: bool = True) -> str:
+    """
+    Returns the page content if it could be retrieved
+
+    url : str
+        The URL from which to retrieve the page's content
+    [deprecated] display : bool
+        Will it display the content? It will by default
+
+    returns str
+    """
     if CONF['DEBUG']: print('Se va a recuperar el contenido de la página', url)
 
     if not (validators.url(url)):
@@ -169,11 +205,33 @@ def get_page(url: str, display: bool = True):
 
         return html
 
-def add_detail(dict: dict, name: str, value: any = None):
+def add_detail(dict: dict, name: str, value: any = None) -> None:
+    """
+    Adds a detail to the detail's dict
+
+    dict : dict
+        The dictionary to append the detail to
+    name : str
+        The name of the detail
+    value : any
+        The value of the detail, could be None
+
+    returns None
+    """
     if is_null(value): value = CONF['EMPTY_VALUE']
     dict[name] = value
 
-def get_value(field, element):
+def get_value(field: dict, element: ResultSet) -> any:
+    """
+    Gets the value from an element with the field details
+
+    field : dict
+        The field details
+    element : ResultSet[Tag]
+        The HTML element retrieved
+
+    returns any
+    """
     # If the field has a parse function, it is used
     if (('parser' in field) & (not is_null(field['parser']))):
         value = field['parser'](element)
@@ -189,7 +247,19 @@ def get_value(field, element):
     if not is_null(value): value = str(value).strip()
     return value
 
-def get_detail(soup, dictionary: dict, name: str):
+def get_detail(soup: BeautifulSoup, dictionary: dict, name: str) -> str:
+    """
+    Gets a detail after it's addition to the given dictionary
+
+    soup : BeautifulSoup
+        The HTML parser
+    dictionary : dict
+        The dictionary of details
+    name : str
+        The name of the detail to retrieve
+
+    returns str
+    """
     # print('Attempt to retrieve field', name)
 
     field = CONF['FIELDS'][name] if name in CONF['FIELDS'] else " "
@@ -202,13 +272,31 @@ def get_detail(soup, dictionary: dict, name: str):
 
     return value
 
-def get_content(url: str = None, content: str = None):
+def get_content(url: str = None, content: str = None) -> str:
+    """
+    Decorator to retrieve the content from a page
+
+    url : str
+        The url from which to retrieve the content
+    content : str
+        The possible content to analyze, if it exists, use it
+
+    returns str
+    """
     if not is_null(url): content = get_page(url, False)
     if is_null(content): return None
 
     return content
 
-def get_url_id(url: str):
+def get_url_id(url: str) -> str:
+    """
+    Gets the ID from the URL
+
+    url : str
+        The url from which to get the ID
+
+    returns str
+    """
     start = url.find(CONF['URL_ID_START']) + len(CONF['URL_ID_START'])
     end = url.rfind(CONF['URL_ID_END'])
     id = url[start:end]
@@ -216,7 +304,17 @@ def get_url_id(url: str):
     return id
 CONF['get_url_id'] = get_url_id
 
-def get_product_details(url: str = None, content: str = None):
+def get_product_details(url: str = None, content: str = None) -> dict:
+    """
+    Gets the details from a product
+
+    url : str
+        The URL from which to get the page content
+    content : str
+        The possible content to use
+
+    returns dict
+    """
     content = get_content(url, content)
     if is_null(content): return None
     if CONF['DEBUG']: print('Se van a recuperar los detalles de una página de producto', url)
@@ -233,7 +331,17 @@ def get_product_details(url: str = None, content: str = None):
 
     return row
 
-def get_categories(url: str = None, content: str = None):
+def get_categories(url: str = None, content: str = None) -> List[str]:
+    """
+    Gets the categories from a page
+
+    url : str
+        The URL from which to get the page content
+    content : str
+        The possible content to use
+
+    returns dict
+    """
     content = get_content(url, content)
     if is_null(content): return None
     if CONF['DEBUG']: print('Se recuperan las categorías')
@@ -247,7 +355,17 @@ def get_categories(url: str = None, content: str = None):
     if CONF['DEBUG']: print('Se han recuperado un total de:', len(categories), 'categoría(s)')
     return categories
 
-def get_category_products(url: str = None, content: str = None):
+def get_category_products(url: str = None, content: str = None) -> List[str]:
+    """
+    Gets the products from a category
+
+    url : str
+        The URL from which to get the page content
+    content : str
+        The possible content to use
+
+    returns dict
+    """
     content = get_content(url, content)
     if is_null(content): return None
     if CONF['DEBUG']: print('Se recuperan los productos de la categoría')
@@ -265,7 +383,15 @@ def get_category_products(url: str = None, content: str = None):
     # maybe you could force a return of list here to work properly
     return products
 
-def save_csv(data: list):
+def save_csv(data: dict) -> None:
+    """
+    Saves the data to CSV
+
+    data : dict
+        The data to save and parse to CSV
+
+    returns None
+    """
     if CONF['DEBUG']: print('Se guarda el contenido en un fichero .csv', CONF['FILENAME'])
     # keys = ['id'] + list(FIELDS.keys())
     keys = CONF['EXTRA_START_COLUMNS'] + list(CONF['FIELDS'].keys()) + CONF['EXTRA_END_COLUMNS']
@@ -282,10 +408,26 @@ def save_csv(data: list):
             file.write(CONF['SEPARATOR'].join(values))
             file.write(CONF['FILE_NEWLINE'])
 
-def get_image_filename(url: str):
+def get_image_filename(url: str) -> str:
+    """
+    Get the image's filename
+
+    url : str
+        The raw URL to evaluate
+
+    returns str
+    """
     return str(url).replace(BASE_IMG_URL, '').replace('/', '_')
 
-def download_img(url: str):
+def download_img(url: str) -> None:
+    """
+    Downloads an image
+
+    url : str
+        The image's URL
+
+    returns None
+    """
     for attempt in range(0, CONF['MAX_IMG_DOWNLOAD_ATTEMPTS']):
         try:
             filename = get_image_filename(url)
@@ -301,18 +443,41 @@ def download_img(url: str):
         except:
             log_error(f'No se ha podido descargar la imagen {url}, {attempt + 1}º intento')
 
-def get_now():
+def get_now() -> str:
+    """
+    Gets the current timestamp in string format
+
+    returns str
+    """
     return datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-def get_timestamp_str():
+def get_timestamp_str() -> str:
+    """
+    Format the current timestamp
+
+    returns str
+    """
     return '[' + get_now() + ']'
 
-def log_error(data):
+def log_error(data) -> None:
+    """
+    Logs an error to the log file
+
+    returns None
+    """
     with open(CONF['LOG_FILE'], 'a+') as log:
         log.write(get_timestamp_str() + ' ' + str(data))
         log.write(CONF['FILE_NEWLINE'])
 
-def save_images(data: list):
+def save_images(data: List[str]) -> None:
+    """
+    Save all the images
+
+    data : List[str]
+        The array with all the images to download
+
+    returns None
+    """
     if CONF['DEBUG']: print('Se empiezan a descargar todas las imágenes de los productos')
 
     no_img_download = []
@@ -345,10 +510,25 @@ def save_images(data: list):
     not_downloaded = len(no_img_download)
     if not_downloaded & CONF['DEBUG']: print('No se ha(n) podido descargar la(s) imágen(es) de', not_downloaded, 'producto(s)')
 
-def empty_threads():
+def empty_threads() -> None:
+    """
+    Empty all the current THREADS queue
+
+    returns None
+    """
     del CONF['THREADS'][:CONF['THREADS_LIMIT']]
 
-def wait_for_all_threads(empty = True, warning = True):
+def wait_for_all_threads(empty: bool = True, warning: bool = True) -> None:
+    """
+    Waits for all the current THREAHDS in the queue to finish processing
+
+    empty : bool
+        Should it empty the THREAHDS queue after it finishes? It will by default
+    warning : bool
+        Should it warn that it's waiting for all the THREADS to finish? It will by default
+
+    returns None
+    """
     # Wait for all threads to finish before moving on to the next
     for thread in CONF['THREADS']:
         thread.join()
@@ -356,7 +536,17 @@ def wait_for_all_threads(empty = True, warning = True):
     if warning & CONF['DEBUG']: print('\nSe espera a que terminen el resto de hilos\n')
     if empty: empty_threads()
 
-def threadify(target, args: tuple):
+def threadify(target: callable, args: tuple) -> None:
+    """
+    Threadifies a function so it runs asynchronously
+
+    target : callable
+        The function/method to threadify
+    args : tuple
+        The callable arguments
+
+    returns None
+    """
     # Guard close para evitar errores si solo se pasa un parámetro
     # if type(args) != tuple: args = tuple(args)
 
@@ -369,8 +559,22 @@ def threadify(target, args: tuple):
     thread.start()
     CONF['THREADS'].append(thread)
 
-def product_to_thread(data):
+def product_to_thread(data: tuple) -> None:
+    """
+    Product download/retrieval thread decorator
+
+    data : tuple
+        The decorator arguments
+
+    returns None
+    """
     details, product = data
+    """
+    details : dict
+        The memory location of the product details
+    product : str
+        The product URL
+    """
 
     # A loop is made so that the download is attempted n number of times
     for attempt in range(0, CONF['MAX_PRODUCT_DOWNLOAD_ATTEMPTS']):
@@ -382,8 +586,26 @@ def product_to_thread(data):
             log_error(f'No se ha podido descargar el producto {product}, {attempt + 1}º intento')
 
 # def category_products_to_thread(products: set, category_url: str, product_limit: int, limit: int):
-def category_products_to_thread(data):
+def category_products_to_thread(data) -> None:
+    """
+    Products from category download/retrieval thread decorator
+
+    data : tuple
+        The decorator arguments
+
+    returns None
+    """
     products, category_url, product_limit, limit = data
+    """
+    products : Set[str]
+        The memory location to all the products URL set
+    category_url : str
+        The category URL to evaluate
+    product_limit : int
+        The maximum amount of products URL to use per category
+    limit : int
+        The total amount of products that can get downloaded
+    """
 
     product_urls = []
     for attempt in range(0, CONF['MAX_CATEGORY_PRODUCTS_DOWNLOAD_ATTEMPTS']):
@@ -404,7 +626,15 @@ def category_products_to_thread(data):
 
     return None
 
-def is_csv_corrupt(filename: str):
+def is_csv_corrupt(filename: str) -> bool:
+    """
+    Is a CSV corrupted? Checks it
+
+    filename : str
+        The full filename path
+
+    returns bool
+    """
     # If it is not CSV, it is forced
     if not str(filename).endswith('.csv'): filename = f'{filename}.csv'
     file_path = os.path.join(CONF['basedir'], CONF['DATA_FOLDER'], filename)
@@ -426,10 +656,36 @@ def scrape(
     as_csv: bool = True,
     save_imgs: bool = True,
     display: bool = False,
-    category_urls: list = None,
-    products: list = None,
+    category_urls: List[str] = None,
+    products: List[str] = None,
     detect_corruption: bool = True
-):
+) -> None:
+    """
+    Scrapes the data from a website with a given configuration
+
+    category_limit : int = ALL,
+        The maximum amount of categories to loop through, all by default
+    product_limit : int = ALL,
+        The maximum amount of products URL to use per category
+    limit : int = ALL,
+        The global limit, may be deprecated, sure is, it's poorly documented :(
+        The maximum amount of products to loop through, all by default
+    as_csv : bool = True,
+        Will it be saved as CSV? It will by default
+    save_imgs : bool = True,
+        Will it also download the images? It will by default
+    display : bool = False,
+        Will it display the data retrieved? It won't by default.
+        Can be time consuming if the dataset gets too big
+    category_urls : List[str] = None,
+        The list of categories URLs to use, if none given, all that are found will be available
+    products : List[str] = None,
+        The list of products URLs to use, if none given, all that are found will be available
+    detect_corruption : bool = True
+        Will it attempt to check if the final CSV is corrupted? It will by default
+
+    returns None
+    """
     start_time = time.time()
 
     was_products_empty = is_null(products)
@@ -450,7 +706,7 @@ def scrape(
     num_products = 0
 
     # The limit does not work with a single element
-    if len(category_urls) > 1 & limit != ALL:
+    if len(category_urls) > 1 & category_limit != ALL:
         category_urls = category_urls[:category_limit]
 
     # if CONF['DEBUG']: print('\nRecuperando los productos de las categorías\n', len(category_urls), 'categoría(s)\n')
@@ -513,7 +769,15 @@ def scrape(
     timedelta = format_time(total_time)
     print('Tiempo total de ejecución:', timedelta)
 
-def format_time(seconds):
+def format_time(seconds: int) -> str:
+    """
+    Formats a raw timestmap in seconds, mainly used for benchmarking
+
+    seconds : int
+        The raw timestamp in seconds
+
+    returns str
+    """
     return datetime.timedelta(seconds=seconds)
 
 # Execute only if wanted so, not on import
