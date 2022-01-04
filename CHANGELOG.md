@@ -1,11 +1,14 @@
 # CHANGELOG #
 All the log of changes on the project/repository
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
 ## 2022-01-03
 ### Added
 - `PythonDoc` the whole `script.py` and other missing functions
 - Add `get_url_id` to the `configuration` file
 - Implement `has_required_fields` not to execute an incomplete `scraper`, with exception handling in the `orchestrator`
+- Add CHANGELOG standards
 
 ### Modified
 - Retyped, and add, missing data parameter types, or incorrectly put, `list` instead of `List[str]`
