@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Modified
 - Retyped, and add, missing data parameter types, or incorrectly put, `list` instead of `List[str]`
+- Updated wiki pages
 
 ## 2022-01-02
 ### Added
